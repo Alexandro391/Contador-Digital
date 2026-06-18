@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Impressão - FMC</title>
+
+    <!-- ===== PWA META TAGS ===== -->
+    <meta name="application-name" content="Impressão FMC">
+    <meta name="description" content="Controle de Impressão da Faculdade de Medicina de Campos">
+    <meta name="theme-color" content="#1a6b5a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Impressão FMC">
+    <meta name="msapplication-TileColor" content="#1a6b5a">
+    <meta name="msapplication-tap-highlight" content="no">
+
+    <!-- Manifest injetado via JS (gerado dinamicamente com ícone canvas) -->
+    <link id="pwa-manifest" rel="manifest">
+
+    <!-- Apple touch icons (injetados via JS após geração do ícone) -->
+    <link id="apple-touch-icon" rel="apple-touch-icon" sizes="180x180">
+    <link id="favicon-32" rel="icon" type="image/png" sizes="32x32">
+    <link id="favicon-16" rel="icon" type="image/png" sizes="16x16">
+    <style>
+        /* ============================================================
+           PALETA OFICIAL FMC
+           Verde-azulado escuro #1a6b5a
+           Verde-teal médio #2a8c74
+           Menta #b2dfdb / #e0f2f1
+           Cinza muito claro #f4f4f4
+           ============================================================ */
+        :root {
+            --fmc-dark: #1a6b5a;
+            --fmc-mid: #2a8c74;
+            --fmc-light: #e0f2f1;
+            --fmc-mint: #b2dfdb;
+            --fmc-bg: #f4f4f4;
+            --fmc-white: #ffffff;
+            --fmc-danger: #c62828;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--fmc-bg);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1600px;
+            width: 100%;
+            background: var(--fmc-white);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        /* ===== CABEÇALHO INSTITUCIONAL (FMC GREEN) ===== */
+        .header-institucional {
+            background: linear-gradient(135deg, var(--fmc-dark) 0%, var(--fmc-mid) 100%);
+            border-radius: 12px;
+            padding: 20px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: var(--fmc-white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-institucional::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 50%;
+        }
+
+        .header-institucional .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 1;
+        }
+
+        .header-institucional .logo-icon {
+            font-size: 36px;
+            color: var(--fmc-mint);
+        }
+
+        .header-institucional .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-institucional .logo-fmc {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            text-transform: lowercase;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1;
+            color: var(--fmc-white);
+        }
+
+        .header-institucional .logo-fmc span {
+            color: var(--fmc-mint);
+        }
+
+        .header-institucional .logo-sub {
+            font-size: 13px;
+            font-weight: 300;
+            opacity: 0.9;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+        }
+
+        .header-institucional .logo-sub-sub {
+            font-size: 11px;
+            font-weight: 300;
+            opacity: 0.7;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header-institucional .periodo {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+        }
+
+        .header-institucional .periodo .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.7;
+            letter-spacing: 1.5px;
+        }
+
+        .header-institucional .periodo .valor {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-institucional .periodo .valor input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            color: var(--fmc-white);
+            font-size: 16px;
+            font-weight: 600;
+            width: 70px;
+            text-align: center;
+            padding: 2px 4px;
+            transition: border-color 0.3s;
+        }
+
+        .header-institucional .periodo .valor input:focus {
+            outline: none;
+            border-bottom-color: var(--fmc-white);
+        }
+
+        .firebase-status {
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            z-index: 1;
+        }
+
+        /* ===== CONFIGURAÇÃO SEMANAL/MENSAL ===== */
+        .periodo-config {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--fmc-light);
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin: 12px 0 16px;
+            border: 1px solid #c8e6e0;
+        }
+
+        .periodo-config .campo-periodo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .periodo-config .campo-periodo label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--fmc-dark);
+        }
+
+        .periodo-config .campo-periodo input,
+        .periodo-config .campo-periodo select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #b0d4cc;
+            font-size: 14px;
+            background: white;
+        }
+
+        .periodo-config .campo-periodo input {
+            width: 70px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--fmc-dark);
+        }
+
+        .periodo-config .campo-periodo input:focus,
+        .periodo-config .campo-periodo select:focus {
+            outline: none;
+            border-color: var(--fmc-dark);
+            box-shadow: 0 0 0 3px rgba(26, 107, 90, 0.15);
+        }
+
+        .periodo-config .separador {
+            font-size: 20px;
+            font-weight: 300;
+            color: #888;
+        }
+
+        #infoPeriodo {
+            font-size: 13px;
+            color: #555;
+            margin-left: auto;
+            font-weight: 500;
+        }
+
+        /* ===== BARRA DE FERRAMENTAS GLOBAL ===== */
+        .toolbar-global {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0 20px;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-radius: 10px;
+            border: 1px solid #e0e6ed;
+            align-items: center;
+        }
+
+        .toolbar-global button {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toolbar-global button:hover {
+            background: #f0f4f9;
+            border-color: var(--fmc-dark);
+        }
+
+        .toolbar-global button.primary {
+            background: var(--fmc-dark);
+            color: white;
+            border-color: var(--fmc-dark);
+        }
+
+        .toolbar-global button.primary:hover {
+            background: var(--fmc-mid);
+        }
+
+        .toolbar-global button.danger {
+            color: var(--fmc-danger);
+            border-color: var(--fmc-danger);
+        }
+
+        .toolbar-global button.danger:hover {
+            background: #ffebee;
+        }
+
+        .toolbar-global .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .toolbar-global select,
+        .toolbar-global input {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+            font-size: 13px;
+            background: white;
+        }
+
+        /* ===== ESTATÍSTICAS GLOBAIS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin: 12px 0 20px;
+        }
+
+        .stat-card {
+            background: #fafafa;
+            border-radius: 10px;
+            padding: 12px 16px;
+            border: 1px solid #e0e6ed;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card .stat-number {
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--fmc-dark);
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .stat-card.destaque {
+            background: var(--fmc-light);
+            border-color: var(--fmc-dark);
+        }
+
+        .stat-card.destaque .stat-number {
+            color: var(--fmc-dark);
+        }
+
+        .stat-card.urgente {
+            background: #ffebee;
+            border-color: var(--fmc-danger);
+        }
+
+        .stat-card.urgente .stat-number {
+            color: var(--fmc-danger);
+        }
+
+        .stat-card.sucesso {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+        }
+
+        .stat-card.sucesso .stat-number {
+            color: #2e7d32;
+        }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard-filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: var(--fmc-light);
+            border-radius: 10px;
+            border: 1px solid var(--fmc-dark);
+        }
+
+        .dashboard-filters .label {
+            font-weight: 700;
+            color: var(--fmc-dark);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-filters button {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--fmc-dark);
+            background: white;
+            color: var(--fmc-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .dashboard-filters button.active {
+            background: var(--fmc-dark);
+            color: white;
+        }
+
+        .dashboard-filters button:hover {
+            background: var(--fmc-dark);
+            color: white;
+        }
+
+        .dashboard-filters input[type="date"] {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #d0d7de;
+            font-size: 13px;
+        }
+
+        .dashboard-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .dash-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e0e6ed;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            text-align: center;
+        }
+
+        .dash-card .dash-number {
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--fmc-dark);
+        }
+
+        .dash-card .dash-label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .dash-card .dash-sub {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .dash-card.primary .dash-number {
+            color: var(--fmc-dark);
+        }
+        .dash-card.success .dash-number {
+            color: #2e7d32;
+        }
+        .dash-card.warning .dash-number {
+            color: #e65100;
+        }
+        .dash-card.danger .dash-number {
+            color: var(--fmc-danger);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 16px;
+        }
+
+        .chart-box {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e0e6ed;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .chart-box h4 {
+            color: var(--fmc-dark);
+            margin-bottom: 12px;
+            font-size: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-box canvas {
+            max-height: 250px;
+            max-width: 100%;
+        }
+
+        .chart-box.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* ===== ABAS ===== */
+        .tabs-container {
+            margin-top: 16px;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 3px solid var(--fmc-dark);
+            margin-bottom: 20px;
+            background: #f8fafa;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 32px;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(26, 107, 90, 0.06);
+            color: var(--fmc-dark);
+        }
+
+        .tab-btn.active {
+            color: var(--fmc-dark);
+            border-bottom-color: var(--fmc-dark);
+            background: white;
+        }
+
+        .tab-btn .badge-tab {
+            background: var(--fmc-dark);
+            color: white;
+            border-radius: 12px;
+            padding: 1px 10px;
+            font-size: 11px;
+            font-weight: 400;
+        }
+
+        .tab-btn.active .badge-tab {
+            background: var(--fmc-dark);
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== SEÇÃO DA IMPRESSORA ===== */
+        .impressora-section {
+            border: 1px solid #e0e6ed;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fafbfc;
+        }
+
+        .impressora-section .section-header {
+            background: var(--fmc-dark);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .impressora-section .section-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .impressora-section .section-header .badge-modelo {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 400;
+        }
+
+        .impressora-section .section-header .section-tools {
+            display: flex;
+            gap: 6px;
+        }
+
+        .impressora-section .section-header .section-tools button {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .impressora-section .section-header .section-tools button:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .impressora-section .section-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 10px 16px;
+            background: var(--fmc-light);
+            border-bottom: 1px solid #c8e6e0;
+        }
+
+        .impressora-section .section-stats .stat-item {
+            text-align: center;
+        }
+
+        .impressora-section .section-stats .stat-item .num {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--fmc-dark);
+        }
+
+        .impressora-section .section-stats .stat-item .label {
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .impressora-section .table-wrapper {
+            overflow-x: auto;
+            padding: 0 4px 4px 4px;
+        }
+
+        .impressora-section table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .impressora-section th {
+            background: #eef3f2;
+            color: var(--fmc-dark);
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 700;
+            white-space: nowrap;
+            border-bottom: 2px solid var(--fmc-dark);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .impressora-section th:first-child {
+            width: 30px;
+        }
+        .impressora-section th:nth-child(2) {
+            width: 35px;
+        }
+
+        .impressora-section td {
+            padding: 6px 6px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .impressora-section tr:hover td {
+            background: #f5faf9;
+        }
+
+        .impressora-section .linha-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .impressora-section .btn-remover {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .impressora-section .btn-remover:hover {
+            color: var(--fmc-danger);
+            background: #ffebee;
+        }
+
+        .impressora-section .cell-content {
+            min-height: 24px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: text;
+            outline: none;
+            word-break: break-word;
+            transition: background 0.15s;
+        }
+
+        .impressora-section .cell-content:hover {
+            background: #f0f7f5;
+        }
+
+        .impressora-section .cell-content:focus {
+            background: #fff;
+            box-shadow: 0 0 0 2px var(--fmc-dark);
+        }
+
+        .impressora-section .cell-content[contenteditable="true"] {
+            user-select: text;
+        }
+
+        .impressora-section .data-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .impressora-section .hora-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            color: var(--fmc-dark);
+        }
+
+        .impressora-section .tipo-pb .badge-tipo {
+            background: #e0e0e0;
+            color: #333;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .impressora-section .tipo-cor .badge-tipo {
+            background: var(--fmc-dark);
+            color: white;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* SETORES EM CAIXA ALTA - CORES INSTITUCIONAIS */
+        .setor-badge {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .setor-badge.cap {
+            background: var(--fmc-light);
+            color: var(--fmc-dark);
+        }
+        .setor-badge.coordenacao-de-medicina {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        .setor-badge.coordenacao-de-farmacia {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .setor-badge.coordenacao-de-enfermagem {
+            background: #fce4ec;
+            color: #880e4f;
+        }
+        .setor-badge.hotelaria {
+            background: #e0f7fa;
+            color: #006064;
+        }
+        .setor-badge.ouvidoria {
+            background: #f3e5f5;
+            color: #4a148c;
+        }
+        .setor-badge.dp {
+            background: #ffebee;
+            color: #b71c1c;
+        }
+        .setor-badge.rh {
+            background: #e0f2f1;
+            color: #004d40;
+        }
+        .setor-badge.contabilidade {
+            background: #e8eaf6;
+            color: #1a237e;
+        }
+        .setor-badge.fundacao {
+            background: #fbe9e7;
+            color: #bf360c;
+        }
+        .setor-badge.sae {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .setor-badge.biblioteca {
+            background: #f3e5f5;
+            color: #4a148c;
+        }
+        .setor-badge.secretaria-academica {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .setor-badge.secretaria-de-internato {
+            background: #e0f7fa;
+            color: #006064;
+        }
+        .setor-badge.pesquisa {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .setor-badge.extensao {
+            background: #fce4ec;
+            color: #880e4f;
+        }
+        .setor-badge.administracao {
+            background: var(--fmc-light);
+            color: var(--fmc-dark);
+        }
+        .setor-badge.academico {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        .setor-badge.financeiro {
+            background: #e8eaf6;
+            color: #1a237e;
+        }
+        .setor-badge.almoxarifado {
+            background: #f1f8e9;
+            color: #33691e;
+        }
+        .setor-badge.coordenacao-de-estagio {
+            background: #e0f2f1;
+            color: #004d40;
+        }
+        .setor-badge.outros {
+            background: #eceff1;
+            color: #455a64;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 10px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state h4 {
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 560px;
+            width: 92%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                transform: scale(0.9) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal h3 {
+            color: var(--fmc-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 18px;
+        }
+
+        .modal .form-group {
+            margin-bottom: 14px;
+        }
+
+        .modal .form-group label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .modal .form-group input,
+        .modal .form-group select {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+
+        .modal .form-group input:focus,
+        .modal .form-group select:focus {
+            outline: none;
+            border-color: var(--fmc-dark);
+            box-shadow: 0 0 0 3px rgba(26, 107, 90, 0.15);
+        }
+
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+
+        .modal button {
+            padding: 9px 22px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+        }
+
+        .modal .btn-primary {
+            background: var(--fmc-dark);
+            color: white;
+        }
+
+        .modal .btn-primary:hover {
+            background: var(--fmc-mid);
+        }
+
+        .modal .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .modal .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        /* ===== RESPONSIVO ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 14px;
+            }
+            .header-institucional {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px;
+            }
+            .header-institucional .logo-area {
+                flex-direction: column;
+            }
+            .header-institucional .logo-fmc {
+                font-size: 28px;
+            }
+            .periodo-config {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .periodo-config .campo-periodo {
+                justify-content: center;
+            }
+            #infoPeriodo {
+                margin-left: 0;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .toolbar-global {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .toolbar-global .filter-group {
+                margin-left: 0;
+                flex-direction: column;
+                width: 100%;
+            }
+            .toolbar-global .filter-group select,
+            .toolbar-global .filter-group input {
+                width: 100%;
+            }
+            .tabs-header {
+                flex-direction: column;
+                border-bottom: none;
+                border-radius: 10px;
+            }
+            .tab-btn {
+                border-bottom: 2px solid #e0e6ed;
+                margin-bottom: 0;
+                border-radius: 0;
+                justify-content: center;
+                padding: 10px 16px;
+            }
+            .tab-btn.active {
+                border-bottom-color: var(--fmc-dark);
+                background: var(--fmc-light);
+            }
+            .impressora-section .section-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .impressora-section th,
+            .impressora-section td {
+                padding: 4px 4px;
+                font-size: 11px;
+            }
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-box.full-width {
+                grid-column: 1;
+            }
+            .dashboard-filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .dashboard-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 16px;
+            }
+            .toolbar-global {
+                display: none !important;
+            }
+            .btn-remover {
+                display: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .header-institucional {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .impressora-section .section-header {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .stat-card,
+            .impressora-section .section-stats {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .setor-badge,
+            .badge-tipo {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .tab-panel {
+                display: block !important;
+            }
+            .tab-btn {
+                display: none !important;
+            }
+            .tabs-header {
+                display: none !important;
+            }
+            .impressora-section {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            .dashboard-filters {
+                display: none !important;
+            }
+            .charts-grid {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TELA DE LOGIN ===== -->
+    <div id="telaLogin" style="
+        display:flex; align-items:center; justify-content:center;
+        min-height:100vh; width:100%; background:var(--fmc-bg);
+        position:fixed; top:0; left:0; z-index:9999;">
+        <div style="
+            background:#fff; border-radius:16px; padding:40px 36px;
+            box-shadow:0 8px 40px rgba(0,0,0,0.12); width:100%; max-width:380px;
+            text-align:center;">
+            <div style="font-size:48px; margin-bottom:8px;">🏛️</div>
+            <h2 style="color:var(--fmc-dark); margin-bottom:4px; font-size:20px;">Controle de Impressão</h2>
+            <p style="color:#888; font-size:13px; margin-bottom:28px;">Faculdade de Medicina de Campos</p>
+
+            <div style="margin-bottom:14px; text-align:left;">
+                <label style="font-size:13px; font-weight:600; color:var(--fmc-dark); display:block; margin-bottom:4px;">E-mail</label>
+                <input id="loginEmail" type="email" placeholder="seu@email.com"
+                    style="width:100%; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px;
+                           font-size:14px; outline:none; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:20px; text-align:left;">
+                <label style="font-size:13px; font-weight:600; color:var(--fmc-dark); display:block; margin-bottom:4px;">Senha</label>
+                <input id="loginSenha" type="password" placeholder="••••••••"
+                    style="width:100%; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px;
+                           font-size:14px; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div id="loginErro" style="color:#c62828; font-size:13px; margin-bottom:12px; min-height:18px;"></div>
+
+            <button id="btnEntrar" style="
+                width:100%; padding:12px; background:linear-gradient(135deg,var(--fmc-dark),var(--fmc-mid));
+                color:#fff; border:none; border-radius:8px; font-size:15px;
+                font-weight:700; cursor:pointer; letter-spacing:0.5px;">
+                Entrar
+            </button>
+        </div>
+    </div>
+
+    <div id="appPrincipal" style="display:none; width:100%;">
+    <div class="container">
+        <!-- ===== CABEÇALHO INSTITUCIONAL (FMC GREEN) ===== -->
+        <div class="header-institucional">
+            <div class="logo-area">
+                <div class="logo-icon">🏛️</div>
+                <div class="logo-text">
+                    <div class="logo-fmc">.<span>fmc</span></div>
+                    <div class="logo-sub">Faculdade de Medicina de Campos</div>
+                    <div class="logo-sub-sub">Controle de Impressão</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;" class="no-print">
+                <div class="firebase-status" id="firebaseStatus">🔄 Inicializando...</div>
+                <button onclick="window.fazerLogout()" id="btnLogout" style="
+                    display:none; background:rgba(255,255,255,0.15); color:#fff;
+                    border:1.5px solid rgba(255,255,255,0.4); border-radius:6px;
+                    padding:4px 12px; font-size:12px; cursor:pointer; font-weight:600;">
+                    🚪 Sair
+                </button>
+            </div>
+            <div class="periodo">
+                <div class="label">Período</div>
+                <div class="valor">
+                    <input type="text" id="periodoInicio" placeholder="__/__/____" maxlength="10">
+                    <span style="margin:0 4px;">a</span>
+                    <input type="text" id="periodoFim" placeholder="__/__/____" maxlength="10">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CONFIGURAÇÃO SEMANAL/MENSAL ===== -->
+        <div class="periodo-config no-print">
+            <div class="campo-periodo">
+                <label>📅 Semana</label>
+                <input type="number" id="semanaAtual" value="1" min="1" max="53" style="width:50px;">
+            </div>
+            <div class="campo-periodo">
+                <label>📆 Mês</label>
+                <select id="mesAtual">
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+            </div>
+            <div class="campo-periodo">
+                <label>📅 Ano</label>
+                <input type="number" id="anoAtual" value="2026" min="2020" max="2030" style="width:60px;">
+            </div>
+            <span id="infoPeriodo">Semana 1 • Janeiro 2026</span>
+        </div>
+
+        <!-- ===== BARRA DE FERRAMENTAS GLOBAL ===== -->
+        <div class="toolbar-global no-print">
+            <button class="primary" onclick="abrirModal()">➕ Novo Registro</button>
+            <button class="danger" onclick="removerSelecionadosGlobal()">🗑️ Remover Selecionados</button>
+            <button onclick="exportarCSV()">📤 Exportar CSV</button>
+            <button onclick="window.print()">🖨️ Imprimir</button>
+
+            <div class="filter-group">
+                <label style="font-size:13px;">🔍</label>
+                <input type="text" id="filtroBusca" placeholder="Buscar..." oninput="aplicarFiltros()" style="width:130px;">
+                <select id="filtroSetor" onchange="aplicarFiltros()">
+                    <option value="">Todos Setores</option>
+                    <option value="CAP">CAP</option>
+                    <option value="COORDENAÇÃO DE MEDICINA">COORDENAÇÃO DE MEDICINA</option>
+                    <option value="COORDENAÇÃO DE FARMÁCIA">COORDENAÇÃO DE FARMÁCIA</option>
+                    <option value="COORDENAÇÃO DE ENFERMAGEM">COORDENAÇÃO DE ENFERMAGEM</option>
+                    <option value="HOTELARIA">HOTELARIA</option>
+                    <option value="OUVIDORIA">OUVIDORIA</option>
+                    <option value="DP">DP</option>
+                    <option value="RH">RH</option>
+                    <option value="CONTABILIDADE">CONTABILIDADE</option>
+                    <option value="FUNDAÇÃO">FUNDAÇÃO</option>
+                    <option value="SAE">SAE</option>
+                    <option value="BIBLIOTECA">BIBLIOTECA</option>
+                    <option value="SECRETARIA ACADÊMICA">SECRETARIA ACADÊMICA</option>
+                    <option value="SECRETARIA DE INTERNATO">SECRETARIA DE INTERNATO</option>
+                    <option value="PESQUISA">PESQUISA</option>
+                    <option value="EXTENSÃO">EXTENSÃO</option>
+                    <option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option>
+                    <option value="ACADÊMICO">ACADÊMICO</option>
+                    <option value="FINANCEIRO">FINANCEIRO</option>
+                    <option value="ALMOXARIFADO">ALMOXARIFADO</option>
+                    <option value="COORDENAÇÃO DE ESTÁGIO">COORDENAÇÃO DE ESTÁGIO</option>
+                    <option value="OUTROS">OUTROS</option>
+                </select>
+                <select id="filtroTipo" onchange="aplicarFiltros()">
+                    <option value="">Todos Tipos</option>
+                    <option value="P&B">P&B</option>
+                    <option value="Cor">Cor</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ===== ESTATÍSTICAS GLOBAIS ===== -->
+        <div class="stats-grid">
+            <div class="stat-card destaque">
+                <div class="stat-number" id="totalRegistros">0</div>
+                <div class="stat-label">📄 Total de Registros</div>
+            </div>
+            <div class="stat-card sucesso">
+                <div class="stat-number" id="totalPB">0</div>
+                <div class="stat-label">⚫ P&B (total)</div>
+            </div>
+            <div class="stat-card" style="border-color:var(--fmc-dark);">
+                <div class="stat-number" id="totalCor" style="color:var(--fmc-dark);">0</div>
+                <div class="stat-label">🎨 Cor (total)</div>
+            </div>
+            <div class="stat-card urgente">
+                <div class="stat-number" id="totalPaginas">0</div>
+                <div class="stat-label">📑 Total de Páginas</div>
+            </div>
+        </div>
+
+        <!-- ===== ABAS ===== -->
+        <div class="tabs-container">
+            <div class="tabs-header no-print">
+                <button class="tab-btn" data-tab="tabDashboard" onclick="abrirAba('tabDashboard')">
+                    📊 Dashboard <span class="badge-tab" id="badgeDash">●</span>
+                </button>
+                <button class="tab-btn active" data-tab="tab297" onclick="abrirAba('tab297')">
+                    🖨️ Konica 297 <span class="badge-tab" id="badge297">0</span>
+                </button>
+                <button class="tab-btn" data-tab="tab367" onclick="abrirAba('tab367')">
+                    🖨️ Konica 367 <span class="badge-tab" id="badge367">0</span>
+                </button>
+            </div>
+
+            <!-- ABA DASHBOARD -->
+            <div class="tab-panel" id="tabDashboard">
+                <div class="dashboard-filters no-print">
+                    <span class="label">📊 Visualizar por:</span>
+                    <button class="active" data-period="day" onclick="setDashboardPeriod('day')">📅 Dia (Hoje)</button>
+                    <button data-period="week" onclick="setDashboardPeriod('week')">📅 Semana</button>
+                    <button data-period="month" onclick="setDashboardPeriod('month')">📅 Mês</button>
+                    <span style="margin-left:10px;font-weight:700;color:var(--fmc-dark);">OU</span>
+                    <input type="date" id="dashDataEspecifica" onchange="setDashboardPeriod('custom')">
+                    <button onclick="atualizarDashboard()" style="background:var(--fmc-dark);color:white;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;">Atualizar</button>
+                </div>
+
+                <div class="dashboard-metrics" id="dashMetrics">
+                    <div class="dash-card primary">
+                        <div class="dash-number" id="dashTotalReg">0</div>
+                        <div class="dash-label">📄 Total Registros</div>
+                        <div class="dash-sub" id="dashPeriodLabel">Hoje</div>
+                    </div>
+                    <div class="dash-card success">
+                        <div class="dash-number" id="dashTotalPaginas">0</div>
+                        <div class="dash-label">📑 Total de Páginas</div>
+                    </div>
+                    <div class="dash-card warning">
+                        <div class="dash-number" id="dashTotalPB">0</div>
+                        <div class="dash-label">⚫ P&B</div>
+                    </div>
+                    <div class="dash-card danger">
+                        <div class="dash-number" id="dashTotalCor">0</div>
+                        <div class="dash-label">🎨 Cor</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <h4>📊 Impressões por Setor</h4>
+                        <canvas id="chartSector"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h4>🧩 Proporção P&B vs Cor</h4>
+                        <canvas id="chartType"></canvas>
+                    </div>
+                    <div class="chart-box full-width">
+                        <h4>📈 Evolução Diária (últimos 30 dias)</h4>
+                        <canvas id="chartTrend"></canvas>
+                    </div>
+                </div>
+
+                <!-- RANKING DE SETORES (período filtrado) -->
+                <div class="chart-box full-width" style="margin-top:16px;">
+                    <h4>🏢 Impressões por Setor <span id="dashSetorPeriodLabel" style="font-size:13px;font-weight:400;color:#888;"></span></h4>
+                    <div id="tabelaSetores" style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+                            <thead>
+                                <tr style="background:var(--fmc-light);">
+                                    <th style="text-align:left;padding:8px 10px;color:var(--fmc-dark);">Setor</th>
+                                    <th style="text-align:right;padding:8px 10px;color:var(--fmc-dark);">P&B</th>
+                                    <th style="text-align:right;padding:8px 10px;color:var(--fmc-dark);">Cor</th>
+                                    <th style="text-align:right;padding:8px 10px;color:var(--fmc-dark);">Total Páginas</th>
+                                    <th style="text-align:right;padding:8px 10px;color:var(--fmc-dark);">Registros</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaSetores"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 297 -->
+            <div class="tab-panel active" id="tab297">
+                <div class="impressora-section">
+                    <div class="section-header">
+                        <h3>🖨️ Konica Minolta 297 <span class="badge-modelo">Modelo 297</span></h3>
+                        <div class="section-tools">
+                            <button onclick="adicionarRegistro('297')">➕ Novo</button>
+                            <button onclick="removerSelecionados('297')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="section-stats">
+                        <div class="stat-item"><span class="num" id="stats297_registros">0</span><span class="label">Registros</span></div>
+                        <div class="stat-item"><span class="num" id="stats297_pb">0</span><span class="label">P&B</span></div>
+                        <div class="stat-item"><span class="num" id="stats297_cor">0</span><span class="label">Cor</span></div>
+                        <div class="stat-item"><span class="num" id="stats297_paginas">0</span><span class="label">Páginas</span></div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" class="selecionarTodos" data-impressora="297" onchange="toggleTodos(this)"></th>
+                                    <th>#</th>
+                                    <th style="min-width:90px;">Data</th>
+                                    <th style="min-width:70px;">Hora</th>
+                                    <th style="min-width:60px;">P/B</th>
+                                    <th style="min-width:60px;">Cor</th>
+                                    <th style="min-width:140px;">Setor</th>
+                                    <th style="min-width:160px;">Conteúdo</th>
+                                    <th style="width:40px;">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpo297"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 367 -->
+            <div class="tab-panel" id="tab367">
+                <div class="impressora-section">
+                    <div class="section-header">
+                        <h3>🖨️ Konica Minolta 367 <span class="badge-modelo">Modelo 367</span></h3>
+                        <div class="section-tools">
+                            <button onclick="adicionarRegistro('367')">➕ Novo</button>
+                            <button onclick="removerSelecionados('367')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="section-stats">
+                        <div class="stat-item"><span class="num" id="stats367_registros">0</span><span class="label">Registros</span></div>
+                        <div class="stat-item"><span class="num" id="stats367_pb">0</span><span class="label">P&B</span></div>
+                        <div class="stat-item"><span class="num" id="stats367_cor">0</span><span class="label">Cor</span></div>
+                        <div class="stat-item"><span class="num" id="stats367_paginas">0</span><span class="label">Páginas</span></div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" class="selecionarTodos" data-impressora="367" onchange="toggleTodos(this)"></th>
+                                    <th>#</th>
+                                    <th style="min-width:90px;">Data</th>
+                                    <th style="min-width:70px;">Hora</th>
+                                    <th style="min-width:60px;">P/B</th>
+                                    <th style="min-width:60px;">Cor</th>
+                                    <th style="min-width:140px;">Setor</th>
+                                    <th style="min-width:160px;">Conteúdo</th>
+                                    <th style="width:40px;">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpo367"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;font-size:12px;color:#888;">
+            <span>📋 Registros exibidos: <strong id="contadorFiltrados">0</strong></span>
+        </div>
+    </div>
+
+    <!-- ===== MODAL ===== -->
+    <div class="modal-overlay" id="modalRegistro">
+        <div class="modal">
+            <h3>🖨️ Novo Registro de Impressão</h3>
+            <div class="form-group">
+                <label>🖨️ Impressora</label>
+                <select id="modalImpressora">
+                    <option value="297">Konica Minolta 297</option>
+                    <option value="367">Konica Minolta 367</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📅 Data</label>
+                <input type="date" id="modalData">
+            </div>
+            <div class="form-group">
+                <label>⏰ Hora</label>
+                <input type="time" id="modalHora" step="60">
+            </div>
+            <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                    <label>⚫ P&B</label>
+                    <input type="number" id="modalPB" value="0" min="0" step="1">
+                </div>
+                <div>
+                    <label>🎨 Cor</label>
+                    <input type="number" id="modalCor" value="0" min="0" step="1">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>🏢 Setor</label>
+                <select id="modalSetor">
+                    <option value="CAP">CAP</option>
+                    <option value="COORDENAÇÃO DE MEDICINA">COORDENAÇÃO DE MEDICINA</option>
+                    <option value="COORDENAÇÃO DE FARMÁCIA">COORDENAÇÃO DE FARMÁCIA</option>
+                    <option value="COORDENAÇÃO DE ENFERMAGEM">COORDENAÇÃO DE ENFERMAGEM</option>
+                    <option value="HOTELARIA">HOTELARIA</option>
+                    <option value="OUVIDORIA">OUVIDORIA</option>
+                    <option value="DP">DP</option>
+                    <option value="RH">RH</option>
+                    <option value="CONTABILIDADE">CONTABILIDADE</option>
+                    <option value="FUNDAÇÃO">FUNDAÇÃO</option>
+                    <option value="SAE">SAE</option>
+                    <option value="BIBLIOTECA">BIBLIOTECA</option>
+                    <option value="SECRETARIA ACADÊMICA">SECRETARIA ACADÊMICA</option>
+                    <option value="SECRETARIA DE INTERNATO">SECRETARIA DE INTERNATO</option>
+                    <option value="PESQUISA">PESQUISA</option>
+                    <option value="EXTENSÃO">EXTENSÃO</option>
+                    <option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option>
+                    <option value="ACADÊMICO">ACADÊMICO</option>
+                    <option value="FINANCEIRO">FINANCEIRO</option>
+                    <option value="ALMOXARIFADO">ALMOXARIFADO</option>
+                    <option value="COORDENAÇÃO DE ESTÁGIO">COORDENAÇÃO DE ESTÁGIO</option>
+                    <option value="OUTROS">OUTROS</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📝 Conteúdo</label>
+                <input type="text" id="modalConteudo" placeholder="Descreva o conteúdo impresso...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-primary" onclick="salvarRegistro()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    SCRIPT PRINCIPAL - INTEGRAÇÃO COM FIREBASE FIRESTORE
+    ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <script type="module">
+        // ============================================================
+        //  CONFIGURAÇÃO FIREBASE - SUBSTITUA PELOS SEUS DADOS
+        // ============================================================
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import {
+            getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc
+        } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import {
+            getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey:            "AIzaSyB6gFwTcbupvghl3zMeM4VZm0PIu2y_jVE",
+            authDomain:        "cipaa-7a29e.firebaseapp.com",
+            projectId:         "cipaa-7a29e",
+            storageBucket:     "cipaa-7a29e.firebasestorage.app",
+            messagingSenderId: "34051039379",
+            appId:             "1:34051039379:web:d726a6d7dcee6a17eb2d66"
+        };
+
+        const app  = initializeApp(firebaseConfig);
+        const db   = getFirestore(app);
+        const auth = getAuth(app);
+        const COL  = 'impressoes'; // nome da coleção no Firestore
+
+        // ============================================================
+        //  DADOS
+        // ============================================================
+        let dados = {
+            '297': [],
+            '367': []
+        };
+        let ultimoId = { '297': 0, '367': 0 };
+        let modalEditando = null;
+        let dashPeriod = 'day';
+        let chartInstances = { sector: null, type: null, trend: null };
+
+        // ============================================================
+        //  FUNÇÕES DE COMUNICAÇÃO COM O FIRESTORE
+        // ============================================================
+        async function carregarDadosDoBanco() {
+            const statusEl = document.getElementById('firebaseStatus');
+            if (statusEl) statusEl.textContent = '🔄 Conectando ao Firebase...';
+            try {
+                const snapshot = await getDocs(collection(db, COL));
+                const registros = [];
+                snapshot.forEach(docSnap => {
+                    registros.push({ _firebaseId: docSnap.id, ...docSnap.data() });
+                });
+                if (statusEl) statusEl.textContent = `✅ Firebase OK (${registros.length} registros)`;
+                return registros.length > 0 ? registros : null;
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                if (statusEl) statusEl.textContent = `⚠️ Firebase offline: ${error.message}`;
+                // Fallback: tenta carregar do localStorage
+                const saved = localStorage.getItem('controleImpressao_FMC_v2');
+                if (saved) {
+                    try {
+                        return JSON.parse(saved);
+                    } catch (e) {}
+                }
+                return null;
+            }
+        }
+
+        async function adicionarRegistroBanco(registro) {
+            try {
+                const docRef = await addDoc(collection(db, COL), {
+                    id:        registro.id,
+                    Impressora: registro.impressora,
+                    data:      registro.data,
+                    hora:      registro.hora || '',
+                    pb:        registro.pb   || 0,
+                    cor:       registro.cor  || 0,
+                    setor:     registro.setor    || '',
+                    conteudo:  registro.conteudo || ''
+                });
+                registro._firebaseId = docRef.id;
+                return true;
+            } catch (error) {
+                console.error('Erro ao adicionar:', error);
+                return false;
+            }
+        }
+
+        async function atualizarRegistroBanco(registro) {
+            if (!registro._firebaseId) return false;
+            try {
+                await updateDoc(doc(db, COL, registro._firebaseId), {
+                    id:        registro.id,
+                    Impressora: registro.impressora,
+                    data:      registro.data,
+                    hora:      registro.hora || '',
+                    pb:        registro.pb   || 0,
+                    cor:       registro.cor  || 0,
+                    setor:     registro.setor    || '',
+                    conteudo:  registro.conteudo || ''
+                });
+                return true;
+            } catch (error) {
+                console.error('Erro ao atualizar:', error);
+                return false;
+            }
+        }
+
+        async function removerRegistroBanco(registro) {
+            if (!registro || !registro._firebaseId) return false;
+            try {
+                await deleteDoc(doc(db, COL, registro._firebaseId));
+                return true;
+            } catch (error) {
+                console.error('Erro ao remover:', error);
+                return false;
+            }
+        }
+
+        // ============================================================
+        //  FUNÇÕES AUXILIARES
+        // ============================================================
+        function getSemanaNumero(data) {
+            const d = new Date(data + 'T00:00:00');
+            const inicio = new Date(d.getFullYear(), 0, 1);
+            const diff = (d - inicio) / (1000 * 60 * 60 * 24);
+            return Math.ceil((diff + inicio.getDay() + 1) / 7);
+        }
+
+        function getNomeMes(mes) {
+            const nomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return nomes[parseInt(mes) - 1] || mes;
+        }
+
+        function getSetorClass(setor) {
+            const map = {
+                'CAP': 'cap',
+                'COORDENAÇÃO DE MEDICINA': 'coordenacao-de-medicina',
+                'COORDENAÇÃO DE FARMÁCIA': 'coordenacao-de-farmacia',
+                'COORDENAÇÃO DE ENFERMAGEM': 'coordenacao-de-enfermagem',
+                'HOTELARIA': 'hotelaria',
+                'OUVIDORIA': 'ouvidoria',
+                'DP': 'dp',
+                'RH': 'rh',
+                'CONTABILIDADE': 'contabilidade',
+                'FUNDAÇÃO': 'fundacao',
+                'SAE': 'sae',
+                'BIBLIOTECA': 'biblioteca',
+                'SECRETARIA ACADÊMICA': 'secretaria-academica',
+                'SECRETARIA DE INTERNATO': 'secretaria-de-internato',
+                'PESQUISA': 'pesquisa',
+                'EXTENSÃO': 'extensao',
+                'ADMINISTRAÇÃO': 'administracao',
+                'ACADÊMICO': 'academico',
+                'FINANCEIRO': 'financeiro',
+                'ALMOXARIFADO': 'almoxarifado',
+                'COORDENAÇÃO DE ESTÁGIO': 'coordenacao-de-estagio',
+                'OUTROS': 'outros'
+            };
+            return map[setor] || 'outros';
+        }
+
+        function formatarData(dataStr) {
+            if (!dataStr) return '-';
+            const partes = dataStr.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        function formatarHora(horaStr) {
+            if (!horaStr) return '-';
+            return horaStr.slice(0, 5);
+        }
+
+        function atualizarInfoPeriodo() {
+            const semana = document.getElementById('semanaAtual').value;
+            const mes = document.getElementById('mesAtual').value;
+            const ano = document.getElementById('anoAtual').value;
+            document.getElementById('infoPeriodo').textContent =
+                `Semana ${semana} • ${getNomeMes(mes)} ${ano}`;
+        }
+
+        function getCombinedData() {
+            return [...dados['297'], ...dados['367']];
+        }
+
+        function filterDataByPeriod(data, period, customDate = null) {
+            const hoje = new Date();
+            switch (period) {
+                case 'day':
+                    const diaRef = customDate ? new Date(customDate + 'T00:00:00') : hoje;
+                    const diaStr = diaRef.toISOString().split('T')[0];
+                    return data.filter(r => r.data === diaStr);
+                case 'week':
+                    const semanaNum = parseInt(document.getElementById('semanaAtual').value);
+                    const anoRef = parseInt(document.getElementById('anoAtual').value);
+                    return data.filter(r => {
+                        if (!r.data) return false;
+                        const d = new Date(r.data + 'T00:00:00');
+                        return d.getFullYear() === anoRef && getSemanaNumero(r.data) === semanaNum;
+                    });
+                case 'month':
+                    const mesRef = parseInt(document.getElementById('mesAtual').value);
+                    const anoRef2 = parseInt(document.getElementById('anoAtual').value);
+                    return data.filter(r => {
+                        if (!r.data) return false;
+                        const d = new Date(r.data + 'T00:00:00');
+                        return d.getFullYear() === anoRef2 && (d.getMonth() + 1) === mesRef;
+                    });
+                case 'custom':
+                    if (!customDate) return data;
+                    return data.filter(r => r.data === customDate);
+                default:
+                    return data;
+            }
+        }
+
+        // ============================================================
+        //  ABAS
+        // ============================================================
+        let abaAtual = 'tab297';
+
+        function abrirAba(id) {
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            const btn = document.querySelector(`.tab-btn[data-tab="${id}"]`);
+            if (btn) btn.classList.add('active');
+            abaAtual = id;
+
+            if (id === 'tabDashboard') {
+                atualizarDashboard();
+            }
+        }
+
+        // ============================================================
+        //  DASHBOARD
+        // ============================================================
+        function setDashboardPeriod(period) {
+            dashPeriod = period;
+            document.querySelectorAll('.dashboard-filters button').forEach(b => b.classList.remove('active'));
+            const btn = document.querySelector(`.dashboard-filters button[data-period="${period}"]`);
+            if (btn) btn.classList.add('active');
+
+            if (period === 'custom') {
+                const date = document.getElementById('dashDataEspecifica').value;
+                if (date) atualizarDashboard();
+            } else {
+                atualizarDashboard();
+            }
+        }
+
+        function atualizarDashboard() {
+            const allData = getCombinedData();
+            let filteredData = [];
+
+            const customDate = document.getElementById('dashDataEspecifica').value;
+            if (dashPeriod === 'custom' && customDate) {
+                filteredData = filterDataByPeriod(allData, 'day', customDate);
+                document.getElementById('dashPeriodLabel').textContent = `Data: ${formatarData(customDate)}`;
+            } else if (dashPeriod === 'day') {
+                filteredData = filterDataByPeriod(allData, 'day');
+                document.getElementById('dashPeriodLabel').textContent = 'Hoje';
+            } else if (dashPeriod === 'week') {
+                filteredData = filterDataByPeriod(allData, 'week');
+                const semana = document.getElementById('semanaAtual').value;
+                const ano = document.getElementById('anoAtual').value;
+                document.getElementById('dashPeriodLabel').textContent = `Semana ${semana} • ${ano}`;
+            } else if (dashPeriod === 'month') {
+                filteredData = filterDataByPeriod(allData, 'month');
+                const mes = document.getElementById('mesAtual').value;
+                const ano = document.getElementById('anoAtual').value;
+                document.getElementById('dashPeriodLabel').textContent = `${getNomeMes(mes)} ${ano}`;
+            } else {
+                filteredData = allData;
+                document.getElementById('dashPeriodLabel').textContent = 'Todos';
+            }
+
+            // Métricas
+            const totalReg = filteredData.length;
+            let totalPB = 0,
+                totalCor = 0,
+                totalPag = 0;
+            filteredData.forEach(r => {
+                totalPB += r.pb || 0;
+                totalCor += r.cor || 0;
+                totalPag += (r.pb || 0) + (r.cor || 0);
+            });
+
+            document.getElementById('dashTotalReg').textContent = totalReg;
+            document.getElementById('dashTotalPaginas').textContent = totalPag;
+            document.getElementById('dashTotalPB').textContent = totalPB;
+            document.getElementById('dashTotalCor').textContent = totalCor;
+
+            criarGraficos(filteredData);
+            atualizarTabelaSetores(filteredData, document.getElementById('dashPeriodLabel').textContent);
+        }
+
+        function atualizarTabelaSetores(data, periodoLabel) {
+            // Atualiza o label do período na tabela
+            const labelEl = document.getElementById('dashSetorPeriodLabel');
+            if (labelEl) labelEl.textContent = periodoLabel ? `— ${periodoLabel}` : '';
+
+            // Agrega por setor
+            const mapa = {};
+            data.forEach(r => {
+                const setor = r.setor || 'OUTROS';
+                if (!mapa[setor]) mapa[setor] = { pb: 0, cor: 0, registros: 0 };
+                mapa[setor].pb += r.pb || 0;
+                mapa[setor].cor += r.cor || 0;
+                mapa[setor].registros++;
+            });
+
+            const linhas = Object.entries(mapa)
+                .map(([setor, v]) => ({ setor, ...v, total: v.pb + v.cor }))
+                .sort((a, b) => b.total - a.total);
+
+            const tbody = document.getElementById('corpoTabelaSetores');
+            if (!tbody) return;
+
+            if (linhas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:#999;">Nenhum dado no período</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = linhas.map((l, i) => `
+                <tr style="background:${i % 2 === 0 ? '#fff' : 'var(--fmc-light)'};">
+                    <td style="padding:7px 10px;font-weight:600;">${l.setor}</td>
+                    <td style="padding:7px 10px;text-align:right;">${l.pb}</td>
+                    <td style="padding:7px 10px;text-align:right;">${l.cor}</td>
+                    <td style="padding:7px 10px;text-align:right;font-weight:700;color:var(--fmc-dark);">${l.total}</td>
+                    <td style="padding:7px 10px;text-align:right;">${l.registros}</td>
+                </tr>`).join('');
+        }
+
+        function criarGraficos(data) {
+            // 1. Gráfico de Setores
+            const sectorMap = {};
+            data.forEach(r => {
+                const setor = r.setor || 'OUTROS';
+                const paginas = (r.pb || 0) + (r.cor || 0);
+                sectorMap[setor] = (sectorMap[setor] || 0) + paginas;
+            });
+
+            const sortedSectors = Object.entries(sectorMap).sort((a, b) => b[1] - a[1]);
+            const labels = sortedSectors.map(s => s[0]);
+            const values = sortedSectors.map(s => s[1]);
+
+            const ctxSector = document.getElementById('chartSector').getContext('2d');
+            if (chartInstances.sector) chartInstances.sector.destroy();
+            chartInstances.sector = new Chart(ctxSector, {
+                type: 'bar',
+                data: {
+                    labels: labels.length ? labels : ['Sem dados'],
+                    datasets: [{
+                        label: 'Páginas',
+                        data: values.length ? values : [0],
+                        backgroundColor: '#2a8c74',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // 2. Gráfico de Tipo
+            let totalPB = 0,
+                totalCor = 0;
+            data.forEach(r => {
+                totalPB += r.pb || 0;
+                totalCor += r.cor || 0;
+            });
+
+            const ctxType = document.getElementById('chartType').getContext('2d');
+            if (chartInstances.type) chartInstances.type.destroy();
+            chartInstances.type = new Chart(ctxType, {
+                type: 'doughnut',
+                data: {
+                    labels: ['P&B', 'Cor'],
+                    datasets: [{
+                        data: [totalPB || 1, totalCor || 1],
+                        backgroundColor: ['#b2dfdb', '#1a6b5a'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // 3. Gráfico de Tendência
+            const hoje = new Date();
+            const trendData = {};
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(hoje);
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().split('T')[0];
+                trendData[key] = 0;
+            }
+
+            data.forEach(r => {
+                if (r.data && trendData[r.data] !== undefined) {
+                    trendData[r.data] += (r.pb || 0) + (r.cor || 0);
+                }
+            });
+
+            const trendLabels = Object.keys(trendData).map(d => formatarData(d));
+            const trendValues = Object.values(trendData);
+
+            const ctxTrend = document.getElementById('chartTrend').getContext('2d');
+            if (chartInstances.trend) chartInstances.trend.destroy();
+            chartInstances.trend = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: 'Páginas por Dia',
+                        data: trendValues,
+                        borderColor: '#1a6b5a',
+                        backgroundColor: 'rgba(26, 107, 90, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#2a8c74'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        // ============================================================
+        //  RENDERIZAÇÃO
+        // ============================================================
+        function renderizarTudo() {
+            renderizarTabela('297');
+            renderizarTabela('367');
+            atualizarEstatisticasGlobais();
+            atualizarEstatisticasPorImpressora('297');
+            atualizarEstatisticasPorImpressora('367');
+            atualizarBadges();
+            salvarDados();
+
+            if (abaAtual === 'tabDashboard') {
+                atualizarDashboard();
+            }
+        }
+
+        function renderizarTabela(impressora) {
+            const tbody = document.getElementById(`corpo${impressora}`);
+            const registros = dados[impressora] || [];
+            const filtroBusca = document.getElementById('filtroBusca').value.toLowerCase();
+            const filtroSetor = document.getElementById('filtroSetor').value;
+            const filtroTipo = document.getElementById('filtroTipo').value;
+
+            const semanaFiltro = parseInt(document.getElementById('semanaAtual').value);
+            const mesFiltro = parseInt(document.getElementById('mesAtual').value);
+            const anoFiltro = parseInt(document.getElementById('anoAtual').value);
+
+            // Ordena por data + hora descendente (mais recente primeiro)
+            const registrosOrdenados = [...registros].sort((a, b) => {
+                const da = (a.data || '0000-00-00') + 'T' + (a.hora || '00:00');
+                const db2 = (b.data || '0000-00-00') + 'T' + (b.hora || '00:00');
+                return db2.localeCompare(da);
+            });
+
+            let html = '';
+            let index = 0;
+            let totalPB = 0,
+                totalCor = 0,
+                totalPaginas = 0;
+
+            registrosOrdenados.forEach((reg, idx) => {
+                let mostrar = true;
+                if (filtroBusca) {
+                    const texto = (reg.conteudo + reg.setor + reg.data).toLowerCase();
+                    if (!texto.includes(filtroBusca)) mostrar = false;
+                }
+                if (filtroSetor && reg.setor !== filtroSetor) mostrar = false;
+                if (filtroTipo) {
+                    if (filtroTipo === 'P&B' && (reg.pb || 0) === 0) mostrar = false;
+                    if (filtroTipo === 'Cor' && (reg.cor || 0) === 0) mostrar = false;
+                }
+                if (reg.data) {
+                    const dataObj = new Date(reg.data + 'T00:00:00');
+                    const semana = getSemanaNumero(reg.data);
+                    const mes = dataObj.getMonth() + 1;
+                    const ano = dataObj.getFullYear();
+                    if (semanaFiltro && semana !== semanaFiltro) mostrar = false;
+                    if (mesFiltro && mes !== mesFiltro) mostrar = false;
+                    if (anoFiltro && ano !== anoFiltro) mostrar = false;
+                }
+
+                if (mostrar) {
+                    index++;
+                    const pb = reg.pb || 0;
+                    const cor = reg.cor || 0;
+                    totalPB += pb;
+                    totalCor += cor;
+                    totalPaginas += pb + cor;
+
+                    const setorClass = getSetorClass(reg.setor);
+                    const tipoClass = cor > 0 ? 'tipo-cor' : 'tipo-pb';
+
+                    html += `<tr data-impressora="${impressora}" data-index="${reg.id}" data-id="${reg.id}">
+                        <td><input type="checkbox" class="linha-checkbox" data-impressora="${impressora}" onchange="atualizarSelecionarTodos('${impressora}')"></td>
+                        <td>${index}</td>
+                        <td><div class="cell-content data-cell" contenteditable="true" oninput="atualizarCampo('${impressora}', ${reg.id}, 'data', this.innerText)">${formatarData(reg.data)}</div></td>
+                        <td><div class="cell-content hora-cell" contenteditable="true" oninput="atualizarCampo('${impressora}', ${reg.id}, 'hora', this.innerText)">${formatarHora(reg.hora)}</div></td>
+                        <td class="${tipoClass}"><span class="badge-tipo">${pb}</span></td>
+                        <td class="${tipoClass}"><span class="badge-tipo">${cor}</span></td>
+                        <td><span class="setor-badge ${setorClass}">${reg.setor || '-'}</span></td>
+                        <td><div class="cell-content" contenteditable="true" oninput="atualizarCampo('${impressora}', ${reg.id}, 'conteudo', this.innerText)">${reg.conteudo || ''}</div></td>
+                        <td>
+                            <button onclick="editarRegistro('${impressora}', ${reg.id})" style="background:none;border:none;color:var(--fmc-dark);cursor:pointer;font-size:13px;padding:0 2px;" title="Editar">✏️</button>
+                            <button class="btn-remover" onclick="removerRegistro('${impressora}', ${reg.id})" title="Remover">✕</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+
+            if (html === '') {
+                html = `<tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <div class="icon">🖨️</div>
+                            <h4>Nenhum registro encontrado</h4>
+                            <p style="font-size:12px;color:#999;">Adicione um novo registro</p>
+                        </div>
+                    </td>
+                </tr>`;
+            }
+
+            tbody.innerHTML = html;
+            atualizarSelecionarTodos(impressora);
+
+            const abaId = abaAtual === 'tab297' ? '297' : '367';
+            const visiveis = document.querySelectorAll(`#corpo${abaId} tr:not([style*="display:none"])`).length;
+            document.getElementById('contadorFiltrados').textContent = visiveis;
+        }
+
+        // ============================================================
+        //  ESTATÍSTICAS
+        // ============================================================
+        function atualizarEstatisticasGlobais() {
+            let totalReg = 0,
+                totalPB = 0,
+                totalCor = 0,
+                totalPag = 0;
+            for (let imp in dados) {
+                dados[imp].forEach(r => {
+                    totalReg++;
+                    totalPB += r.pb || 0;
+                    totalCor += r.cor || 0;
+                    totalPag += (r.pb || 0) + (r.cor || 0);
+                });
+            }
+            document.getElementById('totalRegistros').textContent = totalReg;
+            document.getElementById('totalPB').textContent = totalPB;
+            document.getElementById('totalCor').textContent = totalCor;
+            document.getElementById('totalPaginas').textContent = totalPag;
+        }
+
+        function atualizarEstatisticasPorImpressora(impressora) {
+            const regs = dados[impressora] || [];
+            let totalReg = regs.length;
+            let totalPB = 0,
+                totalCor = 0,
+                totalPag = 0;
+            regs.forEach(r => {
+                totalPB += r.pb || 0;
+                totalCor += r.cor || 0;
+                totalPag += (r.pb || 0) + (r.cor || 0);
+            });
+            document.getElementById(`stats${impressora}_registros`).textContent = totalReg;
+            document.getElementById(`stats${impressora}_pb`).textContent = totalPB;
+            document.getElementById(`stats${impressora}_cor`).textContent = totalCor;
+            document.getElementById(`stats${impressora}_paginas`).textContent = totalPag;
+        }
+
+        function atualizarBadges() {
+            document.getElementById('badge297').textContent = dados['297'].length;
+            document.getElementById('badge367').textContent = dados['367'].length;
+            document.getElementById('badgeDash').textContent = '●';
+        }
+
+        function salvarDados() {
+            // Salva no localStorage como cache
+            localStorage.setItem('controleImpressao_FMC_v2', JSON.stringify(dados));
+        }
+
+        // ============================================================
+        //  CRUD
+        // ============================================================
+        function atualizarCampo(impressora, id, campo, valor) {
+            const reg = dados[impressora].find(r => r.id === id);
+            if (!reg) return;
+            if (campo === 'data') {
+                const partes = valor.split('/');
+                if (partes.length === 3) {
+                    const novaData = `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`;
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(novaData)) {
+                        reg[campo] = novaData;
+                        renderizarTudo();
+                        atualizarRegistroBanco(reg);
+                        return;
+                    }
+                }
+                return;
+            }
+            reg[campo] = valor;
+            renderizarTudo();
+            atualizarRegistroBanco(reg);
+        }
+
+        function adicionarRegistro(impressora) {
+            modalEditando = null;
+            document.getElementById('modalImpressora').value = impressora;
+            const agora = new Date();
+            document.getElementById('modalData').value = agora.toISOString().split('T')[0];
+            document.getElementById('modalHora').value = agora.toTimeString().slice(0, 5);
+            document.getElementById('modalPB').value = 0;
+            document.getElementById('modalCor').value = 0;
+            document.getElementById('modalSetor').value = 'CAP';
+            document.getElementById('modalConteudo').value = '';
+            document.getElementById('modalRegistro').classList.add('active');
+            document.querySelector('#modalRegistro h3').textContent = `🖨️ Novo Registro - Konica ${impressora}`;
+        }
+
+        function abrirModal() {
+            const imp = abaAtual === 'tab297' ? '297' : '367';
+            adicionarRegistro(imp);
+        }
+
+        async function salvarRegistro() {
+            const impressora = document.getElementById('modalImpressora').value;
+            const data = document.getElementById('modalData').value;
+            const hora = document.getElementById('modalHora').value;
+            const pb = parseInt(document.getElementById('modalPB').value) || 0;
+            const cor = parseInt(document.getElementById('modalCor').value) || 0;
+            const setor = document.getElementById('modalSetor').value;
+            const conteudo = document.getElementById('modalConteudo').value.trim();
+
+            if (!data) {
+                alert('Selecione uma data!');
+                return;
+            }
+            if (pb === 0 && cor === 0) {
+                alert('Informe pelo menos 1 página em P&B ou Cor!');
+                return;
+            }
+
+            if (modalEditando) {
+                const { impressora: imp, index } = modalEditando;
+                dados[imp][index] = {
+                    ...dados[imp][index],
+                    data,
+                    hora,
+                    pb,
+                    cor,
+                    setor,
+                    conteudo: conteudo || 'Sem descrição'
+                };
+                await atualizarRegistroBanco(dados[imp][index]);
+            } else {
+                const novo = {
+                    id: ultimoId[impressora]++,
+                    impressora,
+                    data,
+                    hora,
+                    pb,
+                    cor,
+                    setor,
+                    conteudo: conteudo || 'Sem descrição'
+                };
+                dados[impressora].push(novo);
+                await adicionarRegistroBanco(novo);
+            }
+
+            fecharModal();
+            renderizarTudo();
+        }
+
+        function editarRegistro(impressora, id) {
+            const index = dados[impressora].findIndex(r => r.id === id);
+            const reg = dados[impressora][index];
+            modalEditando = { impressora, index };
+            document.getElementById('modalImpressora').value = impressora;
+            document.getElementById('modalData').value = reg.data;
+            document.getElementById('modalHora').value = reg.hora || '08:00';
+            document.getElementById('modalPB').value = reg.pb || 0;
+            document.getElementById('modalCor').value = reg.cor || 0;
+            document.getElementById('modalSetor').value = reg.setor || 'CAP';
+            document.getElementById('modalConteudo').value = reg.conteudo || '';
+            document.getElementById('modalRegistro').classList.add('active');
+            document.querySelector('#modalRegistro h3').textContent = `✏️ Editar - Konica ${impressora}`;
+        }
+
+        async function removerRegistro(impressora, id) {
+            if (confirm(`Remover este registro da Konica ${impressora}?`)) {
+                const index = dados[impressora].findIndex(r => r.id === id);
+                if (index === -1) return;
+                const reg = dados[impressora][index];
+                await removerRegistroBanco(reg);
+                dados[impressora].splice(index, 1);
+                renderizarTudo();
+            }
+        }
+
+        function removerSelecionados(impressora) {
+            const checkboxes = document.querySelectorAll(`#corpo${impressora} .linha-checkbox:checked`);
+            if (checkboxes.length === 0) {
+                alert('Selecione pelo menos um registro.');
+                return;
+            }
+            if (!confirm(`Remover ${checkboxes.length} registro(s) da Konica ${impressora}?`)) return;
+
+            const indices = Array.from(checkboxes).map(cb => {
+                const tr = cb.closest('tr');
+                return parseInt(tr.dataset.index);
+            }).sort((a, b) => b - a);
+
+            indices.forEach(async i => {
+                const reg = dados[impressora][i];
+                await removerRegistroBanco(reg);
+                dados[impressora].splice(i, 1);
+            });
+            renderizarTudo();
+        }
+
+        async function removerSelecionadosGlobal() {
+            const impressoras = ['297', '367'];
+            let total = 0;
+            impressoras.forEach(imp => {
+                const cbs = document.querySelectorAll(`#corpo${imp} .linha-checkbox:checked`);
+                total += cbs.length;
+            });
+            if (total === 0) {
+                alert('Selecione pelo menos um registro.');
+                return;
+            }
+            if (!confirm(`Remover ${total} registro(s) selecionados de todas as impressoras?`)) return;
+
+            for (let imp of impressoras) {
+                const cbs = document.querySelectorAll(`#corpo${imp} .linha-checkbox:checked`);
+                const indices = Array.from(cbs).map(cb => {
+                    const tr = cb.closest('tr');
+                    return parseInt(tr.dataset.index);
+                }).sort((a, b) => b - a);
+                for (let i of indices) {
+                    const reg = dados[imp][i];
+                    await removerRegistroBanco(reg);
+                    dados[imp].splice(i, 1);
+                }
+            }
+            renderizarTudo();
+        }
+
+        function fecharModal() {
+            document.getElementById('modalRegistro').classList.remove('active');
+            modalEditando = null;
+        }
+
+        function toggleTodos(checkbox) {
+            const impressora = checkbox.dataset.impressora;
+            document.querySelectorAll(`#corpo${impressora} .linha-checkbox`).forEach(cb => cb.checked = checkbox.checked);
+        }
+
+        function atualizarSelecionarTodos(impressora) {
+            const todos = document.querySelectorAll(`#corpo${impressora} .linha-checkbox`);
+            const marcados = document.querySelectorAll(`#corpo${impressora} .linha-checkbox:checked`);
+            const selectAll = document.querySelector(`.selecionarTodos[data-impressora="${impressora}"]`);
+            if (selectAll) {
+                selectAll.checked = todos.length > 0 && marcados.length === todos.length;
+            }
+        }
+
+        // ============================================================
+        //  FILTROS
+        // ============================================================
+        function aplicarFiltros() {
+            renderizarTudo();
+        }
+
+        // ============================================================
+        //  EXPORTAR CSV
+        // ============================================================
+        function exportarCSV() {
+            let todos = [];
+            for (let imp in dados) {
+                dados[imp].forEach(r => {
+                    todos.push({
+                        impressora: imp === '297' ? 'Konica 297' : 'Konica 367',
+                        ...r
+                    });
+                });
+            }
+            if (todos.length === 0) {
+                alert('Não há registros para exportar.');
+                return;
+            }
+            const cabecalho = ['Impressora', 'ID', 'Data', 'Hora', 'P&B', 'Cor', 'Setor', 'Conteúdo'];
+            const linhas = todos.map(r => [
+                r.impressora,
+                r.id,
+                r.data,
+                r.hora || '',
+                r.pb || 0,
+                r.cor || 0,
+                r.setor || '',
+                r.conteudo || ''
+            ]);
+            const conteudo = [cabecalho.join(','), ...linhas.map(l => l.join(','))].join('\n');
+            const blob = new Blob([conteudo], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `controle_impressao_FMC_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // ============================================================
+        //  EVENTOS
+        // ============================================================
+        document.getElementById('semanaAtual').addEventListener('change', () => { atualizarInfoPeriodo();
+            aplicarFiltros(); });
+        document.getElementById('mesAtual').addEventListener('change', () => { atualizarInfoPeriodo();
+            aplicarFiltros(); });
+        document.getElementById('anoAtual').addEventListener('change', () => { atualizarInfoPeriodo();
+            aplicarFiltros(); });
+
+        document.getElementById('periodoInicio').addEventListener('input', function() {
+            formatarDataInput(this);
+        });
+        document.getElementById('periodoFim').addEventListener('input', function() {
+            formatarDataInput(this);
+        });
+
+        function formatarDataInput(input) {
+            let valor = input.value.replace(/\D/g, '');
+            if (valor.length >= 2) valor = valor.slice(0, 2) + '/' + valor.slice(2);
+            if (valor.length >= 5) valor = valor.slice(0, 5) + '/' + valor.slice(5);
+            if (valor.length > 10) valor = valor.slice(0, 10);
+            input.value = valor;
+        }
+
+        // ============================================================
+        //  INICIALIZAÇÃO
+        // ============================================================
+        async function inicializar() {
+            // Tenta carregar do banco
+            let dadosBanco = await carregarDadosDoBanco();
+
+            if (dadosBanco && dadosBanco.length > 0) {
+                // Normaliza os campos vindos do Firestore (Impressora → impressora, etc.)
+                const normalizado = dadosBanco.map(r => ({
+                    _firebaseId: r._firebaseId,
+                    id:          r.id          ?? r.ID          ?? 0,
+                    impressora:  r.impressora  ?? r.Impressora  ?? '',
+                    data:        r.data        ?? '',
+                    hora:        r.hora        ?? '',
+                    pb:          r.pb          ?? 0,
+                    cor:         r.cor         ?? 0,
+                    setor:       r.setor       ?? '',
+                    conteudo:    r.conteudo    ?? ''
+                }));
+
+                dados['297'] = normalizado.filter(r => String(r.impressora) === '297');
+                dados['367'] = normalizado.filter(r => String(r.impressora) === '367');
+
+                normalizado.forEach(r => {
+                    const imp = String(r.impressora);
+                    if (imp === '297' || imp === '367') {
+                        if (r.id > ultimoId[imp]) ultimoId[imp] = r.id;
+                    }
+                });
+                ultimoId['297'] += 1;
+                ultimoId['367'] += 1;
+            } else {
+                // Fallback: tenta localStorage
+                const saved = localStorage.getItem('controleImpressao_FMC_v2');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        dados['297'] = parsed['297'] || [];
+                        dados['367'] = parsed['367'] || [];
+                        for (let imp in dados) {
+                            ultimoId[imp] = dados[imp].reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
+                        }
+                    } catch (e) {
+                        dados = { '297': [], '367': [] };
+                        ultimoId = { '297': 1, '367': 1 };
+                    }
+                } else {
+                    dados = { '297': [], '367': [] };
+                    ultimoId = { '297': 1, '367': 1 };
+                }
+            }
+
+            const agora = new Date();
+            document.getElementById('mesAtual').value = agora.getMonth() + 1;
+            document.getElementById('anoAtual').value = agora.getFullYear();
+            document.getElementById('semanaAtual').value = getSemanaNumero(agora.toISOString().split('T')[0]);
+            document.getElementById('dashDataEspecifica').value = agora.toISOString().split('T')[0];
+            atualizarInfoPeriodo();
+            renderizarTudo();
+        }
+
+        // ============================================================
+        //  AUTENTICAÇÃO
+        // ============================================================
+        async function fazerLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const senha = document.getElementById('loginSenha').value;
+            const erroEl = document.getElementById('loginErro');
+            erroEl.textContent = '';
+            if (!email || !senha) { erroEl.textContent = 'Preencha e-mail e senha.'; return; }
+            try {
+                await signInWithEmailAndPassword(auth, email, senha);
+                // onAuthStateChanged cuida do restante
+            } catch (e) {
+                erroEl.textContent = 'E-mail ou senha incorretos.';
+            }
+        }
+
+        async function fazerLogout() {
+            await signOut(auth);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuário autenticado: exibe o app e oculta o login
+                document.getElementById('telaLogin').style.display  = 'none';
+                document.getElementById('appPrincipal').style.display = 'block';
+                document.getElementById('btnLogout').style.display  = 'inline-block';
+                inicializar();
+            } else {
+                // Não autenticado: exibe o login e oculta o app
+                document.getElementById('telaLogin').style.display  = 'flex';
+                document.getElementById('appPrincipal').style.display = 'none';
+                document.getElementById('btnLogout').style.display  = 'none';
+                // Limpa dados em memória ao sair
+                dados = { '297': [], '367': [] };
+                ultimoId = { '297': 0, '367': 0 };
+            }
+        });
+
+        // Expõe funções ao escopo global (necessário por causa do type="module")
+        window.abrirAba                 = abrirAba;
+        window.abrirModal               = abrirModal;
+        window.adicionarRegistro        = adicionarRegistro;
+        window.atualizarCampo           = atualizarCampo;
+        window.atualizarDashboard       = atualizarDashboard;
+        window.atualizarSelecionarTodos = atualizarSelecionarTodos;
+        window.aplicarFiltros           = aplicarFiltros;
+        window.editarRegistro           = editarRegistro;
+        window.exportarCSV              = exportarCSV;
+        window.fecharModal              = fecharModal;
+        window.removerRegistro          = removerRegistro;
+        window.removerSelecionados      = removerSelecionados;
+        window.removerSelecionadosGlobal = removerSelecionadosGlobal;
+        window.salvarRegistro           = salvarRegistro;
+        window.setDashboardPeriod       = setDashboardPeriod;
+        window.toggleTodos              = toggleTodos;
+        window.fazerLogin               = fazerLogin;
+        window.fazerLogout              = fazerLogout;
+
+        // Event listeners do login — dentro do módulo, sem depender de window.*
+        document.getElementById('btnEntrar').addEventListener('click', fazerLogin);
+        document.getElementById('loginSenha').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') fazerLogin();
+        });
+        document.getElementById('loginEmail').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') fazerLogin();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') fecharModal();
+        });
+
+        document.getElementById('modalRegistro').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) fecharModal();
+        });
+    </script>
+
+    </div><!-- /appPrincipal -->
+
+    <!-- ===== PWA: GERAÇÃO DE ÍCONE + MANIFEST + SERVICE WORKER ===== -->
+    <script>
+    (function() {
+        // ── 1. Gera ícone FMC via Canvas ──────────────────────────────────
+        function gerarIcone(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width  = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const r   = size * 0.12; // raio dos cantos arredondados
+
+            // Fundo degradê verde FMC
+            const grad = ctx.createLinearGradient(0, 0, size, size);
+            grad.addColorStop(0,   '#1a6b5a');
+            grad.addColorStop(1,   '#2a8c74');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(r, 0);
+            ctx.lineTo(size - r, 0);
+            ctx.arcTo(size, 0,   size, r,        r);
+            ctx.lineTo(size, size - r);
+            ctx.arcTo(size, size, size - r, size, r);
+            ctx.lineTo(r, size);
+            ctx.arcTo(0, size,   0, size - r,    r);
+            ctx.lineTo(0, r);
+            ctx.arcTo(0, 0,      r, 0,           r);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ícone de impressora desenhado manualmente (escalonado)
+            const s  = size / 192; // escala base 192 px
+            const cx = size / 2;
+            const cy = size / 2;
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, size * 0.42, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3 * s;
+            ctx.lineCap  = 'round';
+            ctx.lineJoin = 'round';
+
+            // Corpo da impressora
+            const pw = 80 * s, ph = 44 * s;
+            const px = cx - pw / 2, py = cy - ph / 2 + 4 * s;
+            ctx.beginPath();
+            roundRect(ctx, px, py, pw, ph, 8 * s);
+            ctx.fill();
+
+            // Papel saindo em cima
+            const papW = 52 * s, papH = 28 * s;
+            const papX = cx - papW / 2, papY = py - papH + 4 * s;
+            ctx.fillStyle = 'rgba(255,255,255,0.35)';
+            ctx.beginPath();
+            roundRect(ctx, papX, papY, papW, papH, 3 * s);
+            ctx.fill();
+
+            // Papel saindo embaixo
+            const outW = 52 * s, outH = 22 * s;
+            const outX = cx - outW / 2, outY = py + ph - 6 * s;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            roundRect(ctx, outX, outY, outW, outH, 3 * s);
+            ctx.fill();
+
+            // Linhas no papel de saída
+            ctx.fillStyle = 'rgba(26,107,90,0.5)';
+            [0, 1, 2].forEach(function(i) {
+                ctx.fillRect(outX + 6 * s, outY + 5 * s + i * 5 * s, outW - 12 * s, 2 * s);
+            });
+
+            // Luz da impressora
+            ctx.fillStyle = '#b2dfdb';
+            ctx.beginPath();
+            ctx.arc(px + pw - 14 * s, py + ph / 2, 5 * s, 0, Math.PI * 2);
+            ctx.fill();
+
+            return canvas.toDataURL('image/png');
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.arcTo(x + w, y,     x + w, y + r,     r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+            ctx.lineTo(x + r, y + h);
+            ctx.arcTo(x, y + h,     x, y + h - r,     r);
+            ctx.lineTo(x, y + r);
+            ctx.arcTo(x, y,         x + r, y,          r);
+            ctx.closePath();
+        }
+
+        const icon192 = gerarIcone(192);
+        const icon512 = gerarIcone(512);
+        const icon180 = gerarIcone(180);
+        const icon32  = gerarIcone(32);
+        const icon16  = gerarIcone(16);
+
+        // ── 2. Injeta links de ícone ──────────────────────────────────────
+        document.getElementById('apple-touch-icon').href = icon180;
+        document.getElementById('favicon-32').href       = icon32;
+        document.getElementById('favicon-16').href       = icon16;
+
+        // Favicon dinâmico para aba do browser
+        const faviconEl = document.createElement('link');
+        faviconEl.rel  = 'icon';
+        faviconEl.type = 'image/png';
+        faviconEl.href = icon32;
+        document.head.appendChild(faviconEl);
+
+        // ── 3. Gera manifest.json dinamicamente ───────────────────────────
+        const manifest = {
+            name:             'Controle de Impressão - FMC',
+            short_name:       'Impressão FMC',
+            description:      'Controle de Impressão da Faculdade de Medicina de Campos',
+            start_url:        './',
+            display:          'standalone',
+            background_color: '#f4f4f4',
+            theme_color:      '#1a6b5a',
+            orientation:      'any',
+            icons: [
+                { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+                { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
+
+        // ── 4. Registra Service Worker inline ────────────────────────────
+        // O SW é embutido como Blob para não precisar de arquivo externo
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+const CACHE = 'fmc-impressao-v1';
+const URLS  = [self.location.pathname];
+
+self.addEventListener('install', e => {
+    e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+    e.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+        )
+    );
+    self.clients.claim();
+});
+
+self.addEventListener('fetch', e => {
+    e.respondWith(
+        fetch(e.request).catch(() => caches.match(e.request))
+    );
+});
+            `;
+            const swBlob = new Blob([swCode], { type: 'application/javascript' });
+            const swURL  = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swURL, { scope: './' })
+                .then(() => console.log('[FMC PWA] Service Worker registrado ✓'))
+                .catch(err => console.warn('[FMC PWA] SW erro:', err));
+        }
+
+        // ── 5. Banner de instalação (botão flutuante) ─────────────────────
+        let deferredPrompt = null;
+        const btnInstalar = document.createElement('button');
+        btnInstalar.id        = 'btn-instalar-pwa';
+        btnInstalar.innerHTML = '📲 Instalar App';
+        btnInstalar.style.cssText = `
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, #1a6b5a, #2a8c74);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 22px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            box-shadow: 0 6px 24px rgba(26,107,90,0.45);
+            cursor: pointer;
+            z-index: 9999;
+            transition: transform 0.15s, box-shadow 0.15s;
+        `;
+        btnInstalar.addEventListener('mouseenter', () => {
+            btnInstalar.style.transform  = 'scale(1.05)';
+            btnInstalar.style.boxShadow  = '0 10px 32px rgba(26,107,90,0.55)';
+        });
+        btnInstalar.addEventListener('mouseleave', () => {
+            btnInstalar.style.transform  = '';
+            btnInstalar.style.boxShadow  = '0 6px 24px rgba(26,107,90,0.45)';
+        });
+        btnInstalar.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') btnInstalar.style.display = 'none';
+            deferredPrompt = null;
+        });
+        document.body.appendChild(btnInstalar);
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            btnInstalar.style.display = 'block';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            btnInstalar.style.display = 'none';
+            deferredPrompt = null;
+            console.log('[FMC PWA] App instalado com sucesso ✓');
+        });
+    })();
+    </script>
+
+</body>
+</html>
